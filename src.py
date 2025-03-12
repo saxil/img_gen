@@ -1,34 +1,43 @@
-# Install required libraries
-# !pip install torch transformers diffusers
-
-# Import necessary modules
-from diffusers import StableDiffusionPipeline
 import torch
+from diffusers import StableDiffusionPipeline
 
-# Check if GPU is available
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
+def generate_image_local(prompt, model_id="runwayml/stable-diffusion-v1-5", device="cuda"):
+    """
+    Generates an image from a text prompt using a local Stable Diffusion model.
 
-# Load the model
-model_id = "CompVis/stable-diffusion-v1-4"
-try:
-    pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
-    pipe.to(device)
-    print("Model loaded successfully.")
-except Exception as e:
-    print(f"Failed to load model: {e}")
+    Args:
+        prompt (str): The text description of the desired image.
+        model_id (str): The Stable Diffusion model ID (e.g., "runwayml/stable-diffusion-v1-5").
+        device (str): The device to use ("cuda" for GPU, "cpu" for CPU).
 
-# Example usage
-prompt = "A futuristic cityscape at sunset"
-print(f"Generating image for prompt: '{prompt}'")
+    Returns:
+        PIL.Image.Image: The generated image, or None if an error occurs.
+    """
+    try:
+        # Load the Stable Diffusion pipeline
+        pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
+        pipe = pipe.to(device)
 
-try:
-    # Generate the image
-    image = pipe(prompt).images[0]
-    print("Image generated successfully.")
-    
-    # Display the image in Colab
-    from IPython.display import display
-    display(image)
-except Exception as e:
-    print(f"Failed to generate image: {e}")
+        # Generate the image
+        image = pipe(prompt).images[0]
+        return image
+
+    except Exception as e:
+        print(f"Error generating image: {e}")
+        return None
+
+def display_image(image):
+    """Displays a PIL Image object."""
+    if image:
+        image.show() #or image.save("generated_local_image.png")
+
+# Example usage:
+prompt = "A majestic lion in a vibrant jungle, digital art"
+model_id = "runwayml/stable-diffusion-v1-5" # or other stable diffusion models.
+device = "cuda" if torch.cuda.is_available() else "cpu" # Use GPU if available
+
+generated_image = generate_image_local(prompt, model_id, device)
+display_image(generated_image)
+
+if generated_image:
+    generated_image.save("generated_local_image.png") #Saves the image.
